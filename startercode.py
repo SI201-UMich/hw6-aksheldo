@@ -37,7 +37,7 @@ def load_json(filename):
         cannot be opened or is not valid JSON.
     """
     try:
-        with open(filename, 'r') as file:
+        with open(filename, 'r', encoding='utf-8') as file:
             info = json.load(file)
             return info
     except:
@@ -58,7 +58,8 @@ def create_cache(dictionary, filename):
     RETURNS:
         None
     """
-    pass
+    with open(filename, 'w') as file:
+        json.dump(dictionary, file)
 
 
 def search_breed(breed_id):
