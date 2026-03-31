@@ -192,7 +192,38 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
-    pass
+    with open(cache_file, 'r', encoding='utf-8') as file:
+            info = json.load(file)
+    
+    # creates temporary dictionary for all id-count pairs
+    full_dict = {}
+
+    for item in info.values():
+
+        # skips cases where cache entry has no group relationship
+        try:
+            group_id = item['data']['relationships']['group']['data']['id']
+        except:
+            continue
+        
+        # handles case where no id exists
+        if group_id == None:
+            continue
+        
+        # adds id-count pair to dictionary
+        full_dict[group_id] = full_dict.get(group_id, 0) + 1
+    
+    # creates final dictionary for id-count pairs that mean cutoff requirement
+    cutoff_dict = {}
+    
+    # checks if count is greater than or equal to cutoff
+    for group_id, count in full_dict.items():
+        if count >= cutoff:
+            cutoff_dict[group_id] = count
+
+    return cutoff_dict
+
+
 
 
 # Extra Credit
