@@ -77,12 +77,14 @@ def search_breed(breed_id):
         request failed or the response does not represent a successful breed lookup.
     """
     
-    try:
-        url = 'https://dogapi.dog/api/v2/breeds/' + breed_id
+    try: 
+        url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
         response = requests.get(url)
         data = response.text
-        dict = json.loads(data)
-        return (dict, url)
+
+        if response.status_code == 200 and data != None:
+            dict = json.loads(data)
+            return (dict, url)
     except:
         return None
 
@@ -101,7 +103,32 @@ def update_cache(breed_ids, cache_file):
         A string: "Cached data for {percentage}% of breeds",
         where percentage = (successful_new_adds / len(breed_ids)) * 100.
     """
-    pass
+
+    successful_new_adds = 0
+    with open(cache_file, 'r', encoding='utf-8') as file:
+            info = json.load(file)
+
+    for breed_id in breed_ids:
+        # if the breed is already in the cache
+        if breed_id in info:
+            continue
+        
+        # get data from API using search_breed function
+        result = search_breed(breed_id=breed_id)
+        
+        if result is not None:
+            data, url = result
+            info[breed_id] = data
+            successful_new_adds += 1
+    
+    # use create_cache function to update the cache
+    create_cache(info, cache_file)
+    
+    percentage = (successful_new_adds / len(breed_ids)) * 100
+    string = f"Cached data for {percentage}% of breeds"
+
+    return string
+
 
 
 def get_longest_lifespan_breed(cache_file):
@@ -116,7 +143,37 @@ def get_longest_lifespan_breed(cache_file):
         A tuple (breed_name, max_lifespan_integer) for the winning breed, OR the
         string "No breeds found" if no breed in the cache has a life.max value.
     """
-    pass
+    with open(cache_file, 'r', encoding='utf-8') as file:
+            info = json.load(file)
+    
+    max_lifespan_integer = 0
+    breed_name = ""
+
+    for item in info.values():
+
+        # ensures life.max exists
+        try: 
+            curr_max = int(item['data']['attributes']['life']['max'])
+            curr_name = item['data']['attributes']['name']
+        except:
+            continue
+
+        # checks if the current max lifespan is higher
+        if curr_max > max_lifespan_integer:
+            max_lifespan_integer = curr_max
+            breed_name = curr_name
+        # handles tiebreak (if the max lifespans are equal, the first breed alphabetically 'wins')
+        elif curr_max == max_lifespan_integer and curr_name < breed_name:
+            max_lifespan_integer = curr_max
+            breed_name = curr_name
+    
+    # handles case where life.max or breed isn't found
+    if max_lifespan_integer == 0 or breed_name == "":
+        return "No breeds found"
+    else:
+        return (breed_name, max_lifespan_integer)
+    
+
 
 
 def get_groups_above_cutoff(cutoff, cache_file):
