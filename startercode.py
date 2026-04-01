@@ -44,8 +44,6 @@ def load_json(filename):
         return {}
 
 
-
-
 def create_cache(dictionary, filename):
     """
     Converts a Python dictionary into JSON and writes it to filename (overwrites the
@@ -105,12 +103,19 @@ def update_cache(breed_ids, cache_file):
     """
 
     successful_new_adds = 0
-    with open(cache_file, 'r', encoding='utf-8') as file:
+
+    try:
+        with open(cache_file, 'r', encoding='utf-8') as file:
             info = json.load(file)
+    except:
+        info = {}
 
     for breed_id in breed_ids:
+
+        url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+
         # if the breed is already in the cache
-        if breed_id in info:
+        if url in info:
             continue
         
         # get data from API using search_breed function
@@ -118,7 +123,7 @@ def update_cache(breed_ids, cache_file):
         
         if result is not None:
             data, url = result
-            info[breed_id] = data
+            info[url] = data
             successful_new_adds += 1
     
     # use create_cache function to update the cache
@@ -247,6 +252,44 @@ def recommend_breeds_in_same_group(breed_name, cache_file):
             "No group information available for '{breed_name}'."  (no group id)
             "No recommendations found based on '{breed_name}'."  (no other breeds in that group)
     """
+    
+    with open(cache_file, 'r', encoding='utf-8') as file:
+            info = json.load(file)
+    
+    group = None
+    target_name = None
+    breed_list = []
+    
+    # if cache is empty
+    if len(info) == 0:
+        return "No breed data found in cache."
+    
+    # finds group of given breed
+    for item in info.values():
+        if item['data']['attributes']['name'].lower() == breed_name.lower():
+            target_name = item['data']['attributes']['name']
+            try:
+                group = item['data']["relationships"]["group"]["data"]["id"]
+            # if group_id is missing
+            except:
+                return f"No group information available for '{breed_name}'."
+    
+    # if breed is not in cache
+    if target_name == None:
+        return f"'{breed_name}' is not in the cache."
+    
+    # create list of other breed names in the same group
+    for item in info.values():
+        if item['data']["relationships"]["group"]["data"]["id"] == group and item['data']['attributes']['name'].lower() != breed_name.lower():
+            breed_list.append(item['data']['attributes']['name'])
+    
+    # if no additional breeds are found
+    if len(breed_list) == 0:
+        return f"No recommendations found based on '{breed_name}'."
+    
+    return sorted(breed_list)
+    
+
 
 
 class TestHomeworkDogAPI(unittest.TestCase):
@@ -471,7 +514,7 @@ class TestHomeworkDogAPI(unittest.TestCase):
     # -------------------------
     # extra credit - uncomment tests below to evaluate extra credit function
     # -------------------------
-    """
+    
     def test_recommend_breeds_in_same_group_empty_cache(self):
         create_cache({}, self.test_cache_file)
         self.assertEqual(
@@ -576,7 +619,7 @@ class TestHomeworkDogAPI(unittest.TestCase):
             recommend_breeds_in_same_group("breed a", self.test_cache_file),
             ["Breed B", "Breed Z"],
         )
-    """
+
 
 
 if __name__ == "__main__":
