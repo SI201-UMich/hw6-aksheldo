@@ -2,13 +2,14 @@
 # Your name: Avary Sheldon
 # Your student id: 0521 3113
 # Your email: aksheldo@umich.edu
-# Who or what you worked with on this homework (including generative AI like ChatGPT):
+# Who or what you worked with on this homework (including generative AI like ChatGPT): ChatGPT
 # If you worked with generative AI also add a statement for how you used it.
 # e.g.:
 # Asked ChatGPT for help debugging and understanding the JSON structure
-#
+# How I used AI: I used ChatGPT to help with debugging and to help me familiarize myself with json (when I first started the project).
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
-#
+# I think that my use of GenAI largely aligned with my goals, as I used it to help me better understand concepts.
+# However, I could probably have spent slightly more time debugging on my own.
 # --- ARGUMENTS & EXPECTED RETURN VALUES PROVIDED --- #
 # --- SEE INSTRUCTIONS FOR FULL DETAILS ON METHOD IMPLEMENTATION --- #
 
@@ -41,7 +42,7 @@ def load_json(filename):
             info = json.load(file)
             return info
     except:
-        return {}
+            return {}
 
 
 def create_cache(dictionary, filename):
@@ -82,7 +83,10 @@ def search_breed(breed_id):
 
         if response.status_code == 200 and data != None:
             dict = json.loads(data)
-            return (dict, url)
+
+            if dict is not None:
+                return (dict, url)
+            
     except:
         return None
 
